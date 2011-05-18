@@ -11,9 +11,9 @@ module TemplateParser
   class ProcessingErrors < StandardError
     attr_reader :errors
 
-    def initialize(errors)
+    def initialize(message, errors)
       @errors = errors
-      super(errors.map { |e| e.message }.join("\n-----------------------------------------------------------\n"))
+      super(message + "\n\n" + errors.map { |e| e.message }.compact.join("\n-----------------------------------------------------------\n"))
     end
   end
 
@@ -53,7 +53,7 @@ module TemplateParser
             e
           end
         end
-        raise ProcessingErrors.new(errors)
+        raise ProcessingErrors.new("At least one of the following #{ template.length } template lines should match the given line", errors)
       end
     end
 
@@ -81,6 +81,7 @@ module TemplateParser
       matchers.each do |matcher|
         line_part = line[pos, matcher[:length]]
         processing_error!('Unexpected EOL', matcher, line, pos, meta) unless line_part
+        processing_error!('Unexpected EOL', matcher, line, pos, meta) if line_part.length < matcher[:length]
         case matcher[:type]
         when :string
           if matcher[:string] != line_part
