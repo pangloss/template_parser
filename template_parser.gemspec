@@ -6,11 +6,11 @@ Gem::Specification.new do |s|
   s.name        = "template_parser"
   s.version     = TemplateParser::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["TODO: Write your name"]
-  s.email       = ["TODO: Write your email address"]
-  s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.authors     = ["Darrick Wiebe"]
+  s.email       = ["darrick@innatesoftware.com"]
+  s.homepage    = "https://github.com/pangloss/template_parser"
+  s.summary     = %q{Parse text files by example}
+  s.description = %q{When you need to parse crazy oldschool ascii reports from mainframes or legacy applications of all sorts, this tool can make it quite easy and keep your code concise and maintainable.}
 
   s.rubyforge_project = "template_parser"
 
