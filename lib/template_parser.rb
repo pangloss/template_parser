@@ -17,15 +17,26 @@ module TemplateParser
     end
   end
 
-  class Base
+  module Parser
+    # Create an array of line matchers based on a template.
+    def compile_template(template)
+      template_lines = template.to_enum(:each_line).map { |line| line.chomp }
+      template_lines.map do |line|
+        compile_template_line(line)
+      end
+    end
+
+    # Does the given line match the given line matcher?
     def match_line?(matchers, line)
       matchers.first[:regex] =~ line
     end
 
+    # Does the given line have a match in any of the lines in the template?
     def match_template?(template, line)
       template.detect { |matcher| match_line?(matcher, line) }
     end
 
+    # Get the results of matching any line in the template to the given line
     def match_template(template, line, meta = {})
       matcher = match_template? template, line
       if matcher
@@ -46,6 +57,7 @@ module TemplateParser
       end
     end
 
+    # Process all given lines against the template in order
     def process_lines(lines, line_matchers, meta = {})
       record = {}
       line_matchers.zip(lines) do |matchers, line|
@@ -56,6 +68,7 @@ module TemplateParser
       record
     end
 
+    # Process a given lines against a given line matcher
     def process_line(matchers, line, meta = {})
       pos = 0
       unless block_given?
@@ -91,6 +104,8 @@ module TemplateParser
         pos += matcher[:length]
       end
     end
+
+    private
 
     def compile_template_line(line)
       parts = line.split(/([#:]\w+\s*\]?|\?\s*\]?|<[#:]\w*>)/)
@@ -150,13 +165,6 @@ module TemplateParser
       matchers.first[:regex] = Regexp.new("\\A#{ str }", Regexp::MULTILINE)
     end
 
-    def compile_template(template)
-      template_lines = template.to_enum(:each_line).map { |line| line.chomp }
-      template_lines.map do |line|
-        compile_template_line(line)
-      end
-    end
-
     def processing_error!(message, matcher, line, pos, meta)
       message = <<-MESSAGE
 #{ message }:
@@ -168,5 +176,11 @@ module TemplateParser
       message += "\n\n#{ meta[:lines] }" if meta[:lines]
       raise ProcessingError.new(matcher, line, pos, meta, message)
     end
+  end
+
+  extend Parser
+
+  class Base
+    include Parser
   end
 end
