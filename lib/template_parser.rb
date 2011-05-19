@@ -36,6 +36,14 @@ module TemplateParser
       template.detect { |matcher| match_line?(matcher, line) }
     end
 
+    # Return true if process_lines would run successfully on the given
+    # lines for the given template.
+    def lines_match_template?(template, lines)
+      line_matchers.zip(lines).all? do |matchers, line|
+        match_line?(matchers, line)
+      end
+    end
+
     # Get the results of matching any line in the template to the given line
     def match_template(template, line, meta = {})
       matcher = match_template? template, line
@@ -58,7 +66,7 @@ module TemplateParser
     end
 
     # Process all given lines against the template in order
-    def process_lines(lines, line_matchers, meta = {})
+    def process_lines(line_matchers, lines, meta = {})
       record = {}
       line_matchers.zip(lines) do |matchers, line|
         process_line(matchers, line, meta) do |matcher, data, raw|
@@ -68,7 +76,7 @@ module TemplateParser
       record
     end
 
-    # Process a given lines against a given line matcher
+    # Process a given line against a given line matcher
     def process_line(matchers, line, meta = {})
       pos = 0
       unless block_given?

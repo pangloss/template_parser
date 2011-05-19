@@ -60,7 +60,12 @@ Get the results of matching any line in the template to the given line
 
 Process all given lines against the template in order
 
-  TemplateParser.process_lines(lines, template, file_position_metadata)
+  TemplateParser.process_lines(template, lines, file_position_metadata)
+
+Return true if process_lines would run successfully on the given lines
+for the given template.
+
+  TemplateParser.lines_match_template?(template, lines)
 
 ### Using individual line matchers
 
@@ -68,7 +73,7 @@ Does the given line match the given line matcher?
 
   TemplateParser.match_line?(line_matcher, line)
 
-Process a given lines against a given line matcher
+Process a given line against a given line matcher
 
-  TemplateParser.process_lines(line_matcher, line, file_position_metadata) { |matcher, converted_data, raw_data| }
+  TemplateParser.process_line(line_matcher, line, file_position_metadata) { |matcher, converted_data, raw_data| }
 
