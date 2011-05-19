@@ -39,7 +39,7 @@ module TemplateParser
     # Return true if process_lines would run successfully on the given
     # lines for the given template.
     def lines_match_template?(template, lines)
-      line_matchers.zip(lines).all? do |matchers, line|
+      template.zip(lines).all? do |matchers, line|
         match_line?(matchers, line)
       end
     end
@@ -76,6 +76,14 @@ module TemplateParser
       record
     end
 
+    def process_any_line(template, line, meta = {})
+      record = {}
+      match_template(template, line) do |matcher, data, raw|
+        record[matcher[:symbol]] = data if data != ''
+      end
+      record
+    end
+
     # Process a given line against a given line matcher
     def process_line(matchers, line, meta = {})
       pos = 0
@@ -89,7 +97,7 @@ module TemplateParser
       matchers.each do |matcher|
         line_part = line[pos, matcher[:length]]
         processing_error!('Unexpected EOL', matcher, line, pos, meta) unless line_part
-        processing_error!('Unexpected EOL', matcher, line, pos, meta) if line_part.length < matcher[:length]
+        #processing_error!('Unexpected EOL', matcher, line, pos, meta) if line_part.length < matcher[:length]
         case matcher[:type]
         when :string
           if matcher[:string] != line_part
@@ -162,13 +170,11 @@ module TemplateParser
       str = matchers.map do |matcher|
         case matcher[:type]
         when :string
-          Regexp.escape matcher[:string]
+          "(?:#{Regexp.escape matcher[:string]}|#{Regexp.escape(matcher[:string].rstrip)}$)"
         when :int
-          "[ 0-9]{#{matcher[:length]}}"
-        when :data
-          ".{#{matcher[:length]}}"
-        when :ignore
-          ".{#{matcher[:length]}}"
+          "(?:[ 0-9]{#{matcher[:length]}}|[ 0-9]{,#{matcher[:length]}}$)"
+        when :data, :ignore
+          "(?:.{#{matcher[:length]}}|.{,#{matcher[:length]}}$)"
         end
       end.join('')
       matchers.first[:regex] = Regexp.new("\\A#{ str }", Regexp::MULTILINE)
