@@ -76,6 +76,30 @@ module TemplateParser
       record
     end
 
+    def formatters(template)
+      template.map { |matcher| matcher.first[:formatter] }
+    end
+
+    def format_any_line(template, data)
+      formatter = formatters(template).detect do |formatter|
+        formatter[:lengths].all? do |name, length|
+          data[name] and data[name].to_s.length <= length
+        end
+      end
+      if formatter
+        formatter[:format] % formatter[:keys].map { |key| data[key] }
+      else
+        raise 'No formatter found'
+      end
+    end
+
+    def format_template(template, data)
+      template.map do |matcher|
+        formatter = matcher.first[:formatter]
+        formatter[:format] % formatter[:keys].map { |key| data[key] }
+      end.join "\n"
+    end
+
     def process_any_line(template, line, meta = {})
       record = {}
       match_template(template, line) do |matcher, data, raw|
@@ -163,6 +187,7 @@ module TemplateParser
         end
       end.compact
       compile_regex(matchers)
+      compile_formatter(matchers)
       matchers
     end
 
@@ -178,6 +203,28 @@ module TemplateParser
         end
       end.join('')
       matchers.first[:regex] = Regexp.new("\\A#{ str }", Regexp::MULTILINE)
+    end
+
+    def compile_formatter(matchers)
+      keys = []
+      lengths = {}
+      str = matchers.map do |matcher|
+        if matcher[:symbol]
+          keys << matcher[:symbol]
+          lengths[matcher[:symbol]] = matcher[:length]
+        end
+        case matcher[:type]
+        when :data
+          "%-#{matcher[:length]}s"
+        when :int
+          "%#{matcher[:length]}s"
+        when :ignore
+          " " * matcher[:length]
+        when :string
+          matcher[:string]
+        end
+      end.join('')
+      matchers.first[:formatter] = { :format => str, :keys => keys, :lengths => lengths }
     end
 
     def processing_error!(message, matcher, line, pos, meta)
