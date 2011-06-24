@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 require "template_parser/version"
 
 Gem::Specification.new do |s|
-  s.name        = "template-parser"
+  s.name        = "template_parser"
   s.version     = TemplateParser::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Darrick Wiebe"]
